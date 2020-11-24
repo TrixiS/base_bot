@@ -11,4 +11,5 @@ class MongoDBService(BotService):
             self.bot.config.mongodb_port
         )
         self.db = self.mongo_client[self.bot.config.mongodb_name]
+        self.bot.db = self.db
 

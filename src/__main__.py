@@ -15,6 +15,6 @@ cogs = [
 ]
 
 bot = Bot()
-bot.load_cogs(cogs)
 bot.add_service(MongoDBService)
+bot.load_cogs(cogs)
 bot.run()
