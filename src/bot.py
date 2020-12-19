@@ -2,8 +2,8 @@ import logging
 
 from discord.ext import commands
 
-from context import BotContext
-from cogs.utils.service import BotService
+from .context import BotContext
+from .services.service import BotService
 
 
 class Bot(commands.AutoShardedBot):
@@ -14,7 +14,7 @@ class Bot(commands.AutoShardedBot):
             intents=self.config.discord_intents
         )
         self.logger = logging.getLogger("Bot")
-        self.ctx_type = BotContext
+        self.ctx_cls = kwargs.get("ctx_cls", BotContext)
         self.services = []
 
     def run(self):
@@ -52,9 +52,9 @@ class Bot(commands.AutoShardedBot):
         return app.owner.id == user.id
 
     async def process_commands(self, message):
-        ctx = await self.get_context(message, cls=BotContext)
+        ctx = await self.get_context(message, cls=self.ctx_cls)
 
-        if ctx.command is None:
+        if ctx.command is None or ctx.author.bot:
             return
 
         await self.invoke(ctx)
@@ -70,8 +70,10 @@ class Bot(commands.AutoShardedBot):
 
     @property
     def config(self):
-        return __import__("config")
+        from . import config
+        return config
 
     @property
     def phrases(self):
-        return __import__("phrases")
+        from . import phrases
+        return phrases

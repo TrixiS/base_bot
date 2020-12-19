@@ -2,3 +2,4 @@ venv
 *.pyc
 *.log
 src/config.py
+src/cogs/test.py
