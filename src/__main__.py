@@ -10,10 +10,8 @@ logging.basicConfig(
 
 cogs = [
     "src.cogs.database_service",
-    "src.cogs.language_service",
     "src.cogs.error_handler",
-    "src.cogs.debug",
-    "src.cogs.test"
+    "src.cogs.debug"
 ]
 
 bot = Bot()
