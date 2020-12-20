@@ -1,7 +1,6 @@
 import logging
 
 from .bot import Bot
-from .services.mongodb import MongoDBService
 
 logging.basicConfig(
     filename="logs.log",
@@ -10,12 +9,13 @@ logging.basicConfig(
 )
 
 cogs = [
+    "src.cogs.database_service",
+    "src.cogs.language_service",
     "src.cogs.error_handler",
     "src.cogs.debug",
     "src.cogs.test"
 ]
 
 bot = Bot()
-bot.add_service(MongoDBService)
 bot.load_cogs(cogs)
 bot.run()

@@ -3,39 +3,45 @@ import logging
 from discord.ext import commands
 
 from .context import BotContext
-from .services.service import BotService
 
 
 class Bot(commands.AutoShardedBot):
 
     def __init__(self, *args, **kwargs):
         super().__init__(
-            command_prefix=self.config.command_prefixes,
+            command_prefix=self._get_command_prefix,
             intents=self.config.discord_intents
         )
         self.logger = logging.getLogger("Bot")
         self.ctx_cls = kwargs.get("ctx_cls", BotContext)
         self.services = []
 
+    @staticmethod
+    async def _get_command_prefix(bot, message):
+        default_prefixes = bot.config.command_prefixes + [bot.user.mention]
+
+        if message.guild is None:
+            return default_prefixes
+
+        prefix_doc = await bot.db.guild_settings.find_one(
+            {"guild_id": message.guild.id},
+            {"prefix": 1}
+        )
+
+        if prefix_doc is None or "prefix" not in prefix_doc:
+            return default_prefixes
+        else:
+            return [prefix_doc["prefix"], bot.user.mention]
+
     def run(self):
         super().run(self.config.bot_token, bot=True)
 
     def load_cogs(self, cogs, reload=False):
         for cog in cogs:
-            try:
-                if reload and cog in self.extensions:
-                    self.unload_extension(cog)
+            if reload and cog in self.extensions:
+                self.unload_extension(cog)
 
-                self.load_extension(cog)
-                self.logger.info(self.phrases.loaded_cog.format(cog))
-            except Exception as e:
-                self.logger.error(self.phrases.loading_failed.format(cog, str(e)))
-
-    def add_service(self, service):
-        if not issubclass(service, BotService):
-            return self.logger.error(f"Got {service.__name__}. BotService expected.")
-
-        self.services.append(service(self))
+            self.load_extension(cog)
 
     async def close(self):
         for service in self.services:
@@ -51,8 +57,13 @@ class Bot(commands.AutoShardedBot):
 
         return app.owner.id == user.id
 
+    async def get_context(self, message):
+        ctx = await super().get_context(message, cls=self.ctx_cls)
+        await ctx.__ainit__()
+        return ctx
+
     async def process_commands(self, message):
-        ctx = await self.get_context(message, cls=self.ctx_cls)
+        ctx = await self.get_context(message)
 
         if ctx.command is None or ctx.author.bot:
             return
@@ -75,5 +86,5 @@ class Bot(commands.AutoShardedBot):
 
     @property
     def phrases(self):
-        from . import phrases
-        return phrases
+        from .phrases import ru
+        return ru

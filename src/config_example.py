@@ -5,6 +5,8 @@ command_prefixes: list = ["!", "!!"]
 
 discord_intents: Intents = Intents.all()
 
-mongodb_host: str = "localhost"
-mongodb_port: str = 27017
-mongodb_name: str = "discord_bot"
+mongodb_options: dict = {
+    "host": "localhost",
+    "port": 27017,
+    "database_name": "discord_bot"
+}
